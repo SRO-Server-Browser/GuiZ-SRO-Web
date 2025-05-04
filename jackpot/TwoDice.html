@@ -10,7 +10,7 @@
       font-family: sans-serif;
       text-align: center;
       padding-top: 40px;
-      margin: 0; /* iframe içinde boşlukları kaldırmak için */
+      margin: 0;
     }
 
     .scene-wrapper {
@@ -93,7 +93,7 @@
     </div></div>
   </div>
 
-  <button onclick="rollDice()">Zarları At</button>
+  <button onclick="requestRollDice()">Zarları At</button>
   <p id="result"></p>
 
   <!-- Sesler -->
@@ -109,10 +109,6 @@
     const rollSound = document.getElementById("rollSound");
     const dropSound = document.getElementById("dropSound");
     const rewardSound = document.getElementById("rewardSound");
-
-    function getDiceResult() {
-      return Math.floor(Math.random() * 6) + 1;
-    }
 
     function getRotation(result) {
       let xDeg = 0, yDeg = 0;
@@ -133,13 +129,12 @@
       window.parent.postMessage({ event, data }, "*");
     }
 
-    function rollDice(forcedResults = null) {
+    function rollDice(results) {
       rollSound.currentTime = 0;
       rollSound.play();
 
-      // Zar sonuçlarını forcedResults varsa kullan, yoksa rastgele üret
-      const result1 = forcedResults ? forcedResults[0] : getDiceResult();
-      const result2 = forcedResults ? forcedResults[1] : getDiceResult();
+      const result1 = results[0];
+      const result2 = results[1];
 
       const delay = Math.random() < 0.5 ? [0, 400] : [400, 0];
 
@@ -168,11 +163,17 @@
       }, 1000 + Math.max(...delay));
     }
 
-    // Ana siteden gelen mesajları dinle (örneğin backend'den zar sonuçları)
+    // Zar atma isteği gönder
+    function requestRollDice() {
+      sendMessageToParent("requestRollDice", {});
+      resultText.textContent = "Zar atma isteği gönderildi...";
+    }
+
+    // Ana siteden gelen mesajları dinle
     window.addEventListener("message", (event) => {
       const { event: eventType, data } = event.data;
       if (eventType === "rollDice" && data?.results) {
-        rollDice(data.results); // Backend'den gelen sonuçlarla zar at
+        rollDice(data.results);
       }
     });
   </script>
