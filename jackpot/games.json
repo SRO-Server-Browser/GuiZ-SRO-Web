@@ -1,5 +1,6 @@
 [
   { "name": "Slot Machine", "file": "SlotMachine.html" },
   { "name": "Two Dice", "file": "TwoDice.html" },
+  { "name": "Two Dice [DEMO]", "file": "TwoDice_demo.html" },
   { "name": "Scratch & Win", "file": "Scratch.html" }
 ]
