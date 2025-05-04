@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Slot Makinesi</title>
+  <style>
+    body { text-align: center; font-family: sans-serif; padding-top: 50px; background: #111; color: #fff; }
+    .slot-box {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .slot {
+      width: 100px;
+      height: 100px;
+      margin: 0 10px;
+      font-size: 24px;
+      border: 3px solid #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      background-color: #000;
+      position: relative;
+    }
+    .symbol {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: top 0.1s;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      background: #0f0;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      color: #000;
+    }
+    #result { margin-top: 20px; font-size: 20px; }
+  </style>
+</head>
+<body>
+
+  <div class="slot-box">
+    <div class="slot"><div id="s1" class="symbol">?</div></div>
+    <div class="slot"><div id="s2" class="symbol">?</div></div>
+    <div class="slot"><div id="s3" class="symbol">?</div></div>
+  </div>
+
+  <button onclick="spin()">Çevir!</button>
+  <p id="result"></p>
+
+  <audio id="spin-sound" src="https://www.fesliyanstudios.com/play-mp3/387" preload="auto"></audio>
+  <audio id="stop-sound" src="https://www.fesliyanstudios.com/play-mp3/6676" preload="auto"></audio>
+
+  <script>
+    const items = ["Elma", "Armut", "Bingo", "Kiraz", "Altın"];
+    const symbols = [
+      document.getElementById("s1"),
+      document.getElementById("s2"),
+      document.getElementById("s3")
+    ];
+    const resultText = document.getElementById("result");
+
+    const spinSound = document.getElementById("spin-sound");
+    const stopSound = document.getElementById("stop-sound");
+
+    // Spin sonucu belirleme (Backend simülasyonu)
+    function getSpinResult() {
+      return [
+        items[Math.floor(Math.random() * items.length)],
+        items[Math.floor(Math.random() * items.length)],
+        items[Math.floor(Math.random() * items.length)]
+      ];
+    }
+
+    async function spin() {
+      resultText.textContent = "";
+      spinSound.currentTime = 0;
+      spinSound.play();
+
+      const finalResult = getSpinResult();
+      
+      for (let i = 0; i < 3; i++) {
+        animateSlot(i, finalResult[i], i * 600);
+      }
+
+      setTimeout(() => {
+        const [a, b, c] = finalResult;
+        stopSound.play();
+        if (a === b && b === c) {
+          resultText.textContent = "Jackpot! Üçü de aynı!";
+        } else if (a === b || b === c || a === c) {
+          resultText.textContent = "İki eşleşme!";
+        } else {
+          resultText.textContent = "Şansını tekrar dene!";
+        }
+      }, 2000);
+    }
+
+    function animateSlot(index, finalItem, delay) {
+      const slot = symbols[index];
+      let count = 0;
+      const interval = setInterval(() => {
+        const rand = items[Math.floor(Math.random() * items.length)];
+        slot.textContent = rand;
+        slot.style.top = "100%";
+        setTimeout(() => {
+          slot.style.transition = "none";
+          slot.style.top = "-100%";
+          slot.textContent = rand;
+          setTimeout(() => {
+            slot.style.transition = "top 0.1s";
+            slot.style.top = "0%";
+          }, 10);
+        }, 90);
+
+        count++;
+        if (count > 10 + index * 5) {
+          clearInterval(interval);
+          setTimeout(() => {
+            slot.textContent = finalItem;
+          }, 100);
+        }
+      }, 100);
+    }
+  </script>
+
+</body>
+</html>
