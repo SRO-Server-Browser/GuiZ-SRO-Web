@@ -12,20 +12,17 @@
       padding-top: 40px;
       margin: 0;
     }
-
     .scene-wrapper {
       display: flex;
       justify-content: center;
       gap: 40px;
       margin: 40px auto;
     }
-
     .scene {
       width: 120px;
       height: 120px;
       perspective: 800px;
     }
-
     .cube {
       width: 100%;
       height: 100%;
@@ -33,7 +30,6 @@
       transform-style: preserve-3d;
       transition: transform 1s ease-in-out;
     }
-
     .face {
       position: absolute;
       width: 120px;
@@ -45,14 +41,12 @@
       justify-content: center;
       font-size: 36px;
     }
-
     .face1 { transform: rotateY(0deg) translateZ(60px); }
     .face2 { transform: rotateY(90deg) translateZ(60px); }
     .face3 { transform: rotateY(180deg) translateZ(60px); }
     .face4 { transform: rotateY(-90deg) translateZ(60px); }
     .face5 { transform: rotateX(90deg) translateZ(60px); }
     .face6 { transform: rotateX(-90deg) translateZ(60px); }
-
     button {
       background: #0f0;
       border: none;
@@ -63,7 +57,6 @@
       margin-top: 20px;
       color: #000;
     }
-
     #result {
       margin-top: 20px;
       font-size: 24px;
@@ -71,7 +64,6 @@
   </style>
 </head>
 <body>
-
   <h1>Çift Zar Atma</h1>
   <div class="scene-wrapper">
     <div class="scene"><div class="cube" id="cube1">
@@ -82,7 +74,6 @@
       <div class="face face5">5</div>
       <div class="face face6">6</div>
     </div></div>
-
     <div class="scene"><div class="cube" id="cube2">
       <div class="face face1">1</div>
       <div class="face face2">2</div>
@@ -92,11 +83,8 @@
       <div class="face face6">6</div>
     </div></div>
   </div>
-
-  <button onclick="requestRollDice()">Zarları At</button>
+  <button onclick="requestPlay()">Zarları At</button>
   <p id="result"></p>
-
-  <!-- Sesler -->
   <audio id="rollSound" src="https://freesound.org/data/previews/256/256113_3263906-lq.mp3" preload="auto"></audio>
   <audio id="dropSound" src="https://freesound.org/data/previews/201/201159_2859978-lq.mp3" preload="auto"></audio>
   <audio id="rewardSound" src="https://freesound.org/data/previews/276/276020_4486188-lq.mp3" preload="auto"></audio>
@@ -105,7 +93,6 @@
     const cube1 = document.getElementById("cube1");
     const cube2 = document.getElementById("cube2");
     const resultText = document.getElementById("result");
-
     const rollSound = document.getElementById("rollSound");
     const dropSound = document.getElementById("dropSound");
     const rewardSound = document.getElementById("rewardSound");
@@ -129,12 +116,16 @@
       window.parent.postMessage({ event, data }, "*");
     }
 
-    function rollDice(results) {
+    function playGame(data) {
       rollSound.currentTime = 0;
       rollSound.play();
 
+      const results = data.results;
       const result1 = results[0];
       const result2 = results[1];
+      const sum = data.sum;
+      const reward_amount = data.reward_amount;
+      const reward_description = data.reward_description;
 
       const delay = Math.random() < 0.5 ? [0, 400] : [400, 0];
 
@@ -150,33 +141,35 @@
         dropSound.currentTime = 0;
         dropSound.play();
 
-        const sum = result1 + result2;
-        resultText.textContent = `Sonuçlar: ${result1} + ${result2} = ${sum}`;
+        resultText.textContent = `Sonuçlar: ${result1} + ${data.result2} = ${sum}`;
+
+        if (reward_amount > 0) {
+          rewardSound.play();
+          resultText.textContent += ` | Ödül: ${reward_description}`;
+        }
 
         // Backend'e sonuçları bildir
-        sendMessageToParent("diceResult", { result1, result2, sum });
-
-        if (sum === 12) {
-          rewardSound.play();
-          sendMessageToParent("rewardTriggered", { sum });
-        }
+        sendMessageToParent("gameResult", {
+          result1,
+          result2,
+          sum,
+          reward_amount,
+          reward_description
+        });
       }, 1000 + Math.max(...delay));
     }
 
-    // Zar atma isteği gönder
-    function requestRollDice() {
-      sendMessageToParent("requestRollDice", {});
-      resultText.textContent = "Zar atma isteği gönderildi...";
+    function requestPlay() {
+      sendMessageToParent("requestPlay", {});
+      resultText.textContent = "Oyun isteği gönderildi...";
     }
 
-    // Ana siteden gelen mesajları dinle
     window.addEventListener("message", (event) => {
       const { event: eventType, data } = event.data;
-      if (eventType === "rollDice" && data?.results) {
-        rollDice(data.results);
+      if (eventType === "playGame" && data?.results) {
+        playGame(data);
       }
     });
   </script>
-
 </body>
 </html>
