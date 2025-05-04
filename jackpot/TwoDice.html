@@ -2,165 +2,144 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>Çift Zar Atma</title>
+  <title>Slot Makinesi</title>
   <style>
-    body {
-      background: #111;
-      color: #fff;
-      font-family: sans-serif;
-      text-align: center;
-      padding-top: 40px;
-      margin: 0;
+    body { 
+      text-align: center; 
+      font-family: sans-serif; 
+      padding-top: 50px; 
+      background: #111; 
+      color: #fff; 
     }
-    .scene-wrapper {
+    .slot-box {
       display: flex;
       justify-content: center;
-      gap: 40px;
-      margin: 40px auto;
+      margin-bottom: 20px;
     }
-    .scene {
-      width: 120px;
-      height: 120px;
-      perspective: 800px;
+    .slot {
+      width: 100px;
+      height: 100px;
+      margin: 0 10px;
+      font-size: 24px;
+      border: 3px solid #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      background-color: #000;
+      position: relative;
     }
-    .cube {
+    .symbol {
+      position: absolute;
       width: 100%;
       height: 100%;
-      position: relative;
-      transform-style: preserve-3d;
-      transition: transform 1s ease-in-out;
-    }
-    .face {
-      position: absolute;
-      width: 120px;
-      height: 120px;
-      background: #222;
-      border: 2px solid #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 36px;
+      transition: top 0.1s;
     }
-    .face1 { transform: rotateY(0deg) translateZ(60px); }
-    .face2 { transform: rotateY(90deg) translateZ(60px); }
-    .face3 { transform: rotateY(180deg) translateZ(60px); }
-    .face4 { transform: rotateY(-90deg) translateZ(60px); }
-    .face5 { transform: rotateX(90deg) translateZ(60px); }
-    .face6 { transform: rotateX(-90deg) translateZ(60px); }
     button {
+      padding: 10px 20px;
+      font-size: 18px;
       background: #0f0;
       border: none;
-      padding: 12px 24px;
-      font-size: 18px;
-      border-radius: 6px;
+      border-radius: 5px;
       cursor: pointer;
-      margin-top: 20px;
       color: #000;
     }
-    #result {
-      margin-top: 20px;
-      font-size: 24px;
+    #result { 
+      margin-top: 20px; 
+      font-size: 20px; 
     }
   </style>
 </head>
 <body>
-  <h1>Çift Zar Atma</h1>
-  <div class="scene-wrapper">
-    <div class="scene"><div class="cube" id="cube1">
-      <div class="face face1">1</div>
-      <div class="face face2">2</div>
-      <div class="face face3">3</div>
-      <div class="face face4">4</div>
-      <div class="face face5">5</div>
-      <div class="face face6">6</div>
-    </div></div>
-    <div class="scene"><div class="cube" id="cube2">
-      <div class="face face1">1</div>
-      <div class="face face2">2</div>
-      <div class="face face3">3</div>
-      <div class="face face4">4</div>
-      <div class="face face5">5</div>
-      <div class="face face6">6</div>
-    </div></div>
+  <h1>Slot Makinesi</h1>
+  <div class="slot-box">
+    <div class="slot"><div id="s1" class="symbol">?</div></div>
+    <div class="slot"><div id="s2" class="symbol">?</div></div>
+    <div class="slot"><div id="s3" class="symbol">?</div></div>
   </div>
-  <button onclick="requestPlay()">Zarları At</button>
+  <button onclick="requestPlay()">Çevir!</button>
   <p id="result"></p>
-  <audio id="rollSound" src="https://freesound.org/data/previews/256/256113_3263906-lq.mp3" preload="auto"></audio>
-  <audio id="dropSound" src="https://freesound.org/data/previews/201/201159_2859978-lq.mp3" preload="auto"></audio>
-  <audio id="rewardSound" src="https://freesound.org/data/previews/276/276020_4486188-lq.mp3" preload="auto"></audio>
+  <audio id="spinSound" src="https://www.fesliyanstudios.com/play-mp3/387" preload="auto"></audio>
+  <audio id="stopSound" src="https://www.fesliyanstudios.com/play-mp3/6676" preload="auto"></audio>
+  <audio id="winSound" src="https://freesound.org/data/previews/276/276020_4486188-lq.mp3" preload="auto"></audio>
 
   <script>
-    const cube1 = document.getElementById("cube1");
-    const cube2 = document.getElementById("cube2");
+    const items = ["Elma", "Armut", "Bingo", "Kiraz", "Altın"];
+    const symbols = [
+      document.getElementById("s1"),
+      document.getElementById("s2"),
+      document.getElementById("s3")
+    ];
     const resultText = document.getElementById("result");
-    const rollSound = document.getElementById("rollSound");
-    const dropSound = document.getElementById("dropSound");
-    const rewardSound = document.getElementById("rewardSound");
-
-    function getRotation(result) {
-      let xDeg = 0, yDeg = 0;
-      switch (result) {
-        case 1: xDeg = 0; yDeg = 0; break;
-        case 2: xDeg = 0; yDeg = -90; break;
-        case 3: xDeg = 0; yDeg = 180; break;
-        case 4: xDeg = 0; yDeg = 90; break;
-        case 5: xDeg = -90; yDeg = 0; break;
-        case 6: xDeg = 90; yDeg = 0; break;
-      }
-      const extraX = Math.floor(Math.random() * 4) * 360;
-      const extraY = Math.floor(Math.random() * 4) * 360;
-      return `rotateX(${xDeg + extraX}deg) rotateY(${yDeg + extraY}deg)`;
-    }
+    const spinSound = document.getElementById("spinSound");
+    const stopSound = document.getElementById("stopSound");
+    const winSound = document.getElementById("winSound");
 
     function sendMessageToParent(event, data) {
       window.parent.postMessage({ event, data }, "*");
     }
 
     function playGame(data) {
-      rollSound.currentTime = 0;
-      rollSound.play();
+      spinSound.currentTime = 0;
+      spinSound.play();
 
       const results = data.results;
-      const result1 = results[0];
-      const result2 = results[1];
       const sum = data.sum;
       const reward_amount = data.reward_amount;
       const reward_description = data.reward_description;
 
-      const delay = Math.random() < 0.5 ? [0, 400] : [400, 0];
+      function animateSlot(index, finalItem, delay) {
+        const slot = symbols[index];
+        let count = 0;
+        const interval = setInterval(() => {
+          const rand = items[Math.floor(Math.random() * items.length)];
+          slot.textContent = rand;
+          slot.style.top = "100%";
+          setTimeout(() => {
+            slot.style.transition = "none";
+            slot.style.top = "-100%";
+            slot.textContent = rand;
+            setTimeout(() => {
+              slot.style.transition = "top 0.1s";
+              slot.style.top = "0%";
+            }, 10);
+          }, 90);
+
+          count++;
+          if (count > 10 + index * 5) {
+            clearInterval(interval);
+            setTimeout(() => {
+              slot.textContent = finalItem;
+            }, 100);
+          }
+        }, 100);
+      }
+
+      for (let i = 0; i < 3; i++) {
+        animateSlot(i, items[results[i]], i * 600);
+      }
 
       setTimeout(() => {
-        cube1.style.transform = getRotation(result1);
-      }, delay[0]);
-
-      setTimeout(() => {
-        cube2.style.transform = getRotation(result2);
-      }, delay[1]);
-
-      setTimeout(() => {
-        dropSound.currentTime = 0;
-        dropSound.play();
-
-        resultText.textContent = `Sonuçlar: ${result1} + ${result2} = ${sum}`;
+        stopSound.play();
+        resultText.textContent = `Sonuç: ${items[results[0]]} ${items[results[1]]} ${items[results[2]]}`;
 
         if (reward_amount > 0) {
-          rewardSound.play();
+          winSound.play();
           resultText.textContent += ` | Ödül: ${reward_description}`;
         }
 
-        // Backend'e sonuçları bildir
         sendMessageToParent("gameResult", {
-          result1,
-          result2,
+          results,
           sum,
           reward_amount,
           reward_description
         });
-      }, 1000 + Math.max(...delay));
+      }, 2000);
     }
 
     function requestPlay() {
-      sendMessageToParent("requestPlay", {});
+      sendMessageToParent("requestPlay", { game_type: "SlotGame" });
       resultText.textContent = "Oyun isteği gönderildi...";
     }
 
