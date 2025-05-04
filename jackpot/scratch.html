@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Scratch & Win</title>
+  <style>
+    body {
+      background: #121212;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      padding-top: 30px;
+    }
+    canvas {
+      border: 4px solid #444;
+      border-radius: 12px;
+      touch-action: none;
+      cursor: pointer;
+      box-shadow: 0 0 20px #000;
+    }
+    #scratchContainer {
+      position: relative;
+      display: inline-block;
+    }
+    #scratchCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    #result {
+      font-size: 24px;
+      margin-top: 20px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 24px;
+      font-size: 16px;
+      background: #0f0;
+      border: none;
+      border-radius: 8px;
+      color: #000;
+      cursor: pointer;
+    }
+    h1 {
+      margin-bottom: 30px;
+      font-size: 32px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Scratch & Win</h1>
+
+  <div id="scratchContainer" style="width: 300px; height: 150px;">
+    <canvas id="resultCanvas" width="300" height="150"></canvas>
+    <canvas id="scratchCanvas" width="300" height="150"></canvas>
+  </div>
+
+  <div id="result"></div>
+  <button onclick="resetCard()">New Card</button>
+
+  <audio id="scratchSound" src="https://cdn.pixabay.com/audio/2022/10/30/audio_6f6b83e08c.mp3" preload="auto"></audio>
+  <audio id="rewardSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_b6e1c05db9.mp3" preload="auto"></audio>
+
+  <script>
+    const scratchCanvas = document.getElementById("scratchCanvas");
+    const scratchCtx = scratchCanvas.getContext("2d");
+    const resultCanvas = document.getElementById("resultCanvas");
+    const resultCtx = resultCanvas.getContext("2d");
+    const resultDiv = document.getElementById("result");
+
+    const scratchSound = document.getElementById("scratchSound");
+    const rewardSound = document.getElementById("rewardSound");
+
+    let isDrawing = false;
+    let revealed = false;
+    let result = "";
+
+    function getMockResult() {
+      return Math.random() < 0.1 ? "YOU WIN!" : "TRY AGAIN";
+    }
+
+    function reward() {
+      rewardSound.play();
+      console.log("Reward function called.");
+    }
+
+    function drawResultText() {
+      resultCtx.clearRect(0, 0, resultCanvas.width, resultCanvas.height);
+      resultCtx.fillStyle = "#222";
+      resultCtx.fillRect(0, 0, resultCanvas.width, resultCanvas.height);
+      resultCtx.fillStyle = "#fff";
+      resultCtx.font = "bold 28px sans-serif";
+      resultCtx.textAlign = "center";
+      resultCtx.fillText(result, resultCanvas.width / 2, resultCanvas.height / 2 + 10);
+    }
+
+    function coverCard() {
+      scratchCtx.globalCompositeOperation = "source-over";
+      scratchCtx.fillStyle = "#999";
+      scratchCtx.fillRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+    }
+
+    function startDrawing(e) {
+      isDrawing = true;
+      scratchSound.currentTime = 0;
+      scratchSound.play();
+    }
+
+    function stopDrawing(e) {
+      isDrawing = false;
+      scratchSound.pause();
+      checkReveal();
+    }
+
+    function draw(e) {
+      if (!isDrawing || revealed) return;
+
+      const rect = scratchCanvas.getBoundingClientRect();
+      const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+      const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+
+      scratchCtx.globalCompositeOperation = "destination-out";
+      scratchCtx.beginPath();
+      scratchCtx.arc(x, y, 20, 0, Math.PI * 2);
+      scratchCtx.fill();
+    }
+
+    function checkReveal() {
+      const imageData = scratchCtx.getImageData(0, 0, scratchCanvas.width, scratchCanvas.height);
+      let cleared = 0;
+      for (let i = 0; i < imageData.data.length; i += 4) {
+        if (imageData.data[i + 3] === 0) cleared++;
+      }
+
+      const percent = cleared / (scratchCanvas.width * scratchCanvas.height) * 100;
+      if (percent > 60 && !revealed) {
+        revealed = true;
+        setTimeout(() => {
+          resultDiv.textContent = `Result: ${result}`;
+          if (result === "YOU WIN!") reward();
+        }, 300);
+      }
+    }
+
+    function resetCard() {
+      result = getMockResult();
+      revealed = false;
+      resultDiv.textContent = "";
+      setTimeout(() => {
+        drawResultText();
+        setTimeout(coverCard, 100);
+      }, 50);
+    }
+
+    scratchCanvas.addEventListener("mousedown", startDrawing);
+    scratchCanvas.addEventListener("mouseup", stopDrawing);
+    scratchCanvas.addEventListener("mousemove", draw);
+    scratchCanvas.addEventListener("touchstart", startDrawing);
+    scratchCanvas.addEventListener("touchend", stopDrawing);
+    scratchCanvas.addEventListener("touchmove", draw);
+
+    resetCard(); // Initial run
+  </script>
+</body>
+</html>
