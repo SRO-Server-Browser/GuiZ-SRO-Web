@@ -10,6 +10,7 @@
       font-family: sans-serif;
       text-align: center;
       padding-top: 40px;
+      margin: 0; /* iframe içinde boşlukları kaldırmak için */
     }
 
     .scene-wrapper {
@@ -128,19 +129,19 @@
       return `rotateX(${xDeg + extraX}deg) rotateY(${yDeg + extraY}deg)`;
     }
 
-    function reward() {
-      rewardSound.play();
-      console.log("Jackpot! Ödül tetiklendi.");
+    function sendMessageToParent(event, data) {
+      window.parent.postMessage({ event, data }, "*");
     }
 
-    function rollDice() {
+    function rollDice(forcedResults = null) {
       rollSound.currentTime = 0;
       rollSound.play();
 
-      const result1 = getDiceResult();
-      const result2 = getDiceResult();
+      // Zar sonuçlarını forcedResults varsa kullan, yoksa rastgele üret
+      const result1 = forcedResults ? forcedResults[0] : getDiceResult();
+      const result2 = forcedResults ? forcedResults[1] : getDiceResult();
 
-      const delay = Math.random() < 0.5 ? [0, 400] : [400, 0]; // Rastgele biri gecikmeli
+      const delay = Math.random() < 0.5 ? [0, 400] : [400, 0];
 
       setTimeout(() => {
         cube1.style.transform = getRotation(result1);
@@ -157,11 +158,23 @@
         const sum = result1 + result2;
         resultText.textContent = `Sonuçlar: ${result1} + ${result2} = ${sum}`;
 
+        // Backend'e sonuçları bildir
+        sendMessageToParent("diceResult", { result1, result2, sum });
+
         if (sum === 12) {
-          reward();
+          rewardSound.play();
+          sendMessageToParent("rewardTriggered", { sum });
         }
       }, 1000 + Math.max(...delay));
     }
+
+    // Ana siteden gelen mesajları dinle (örneğin backend'den zar sonuçları)
+    window.addEventListener("message", (event) => {
+      const { event: eventType, data } = event.data;
+      if (eventType === "rollDice" && data?.results) {
+        rollDice(data.results); // Backend'den gelen sonuçlarla zar at
+      }
+    });
   </script>
 
 </body>
