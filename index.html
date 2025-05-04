@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jackpot Games</title>
+  <style>
+body {
+  background-color: #121212;
+  color: white;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Daha esnek kart boyutları */
+  grid-gap: 10px; /* Kartlar arasındaki mesafe */
+  width: 95vw; /* Ekranın %95'ini kullanarak daha iyi yerleşim */
+  padding: 10px;
+  justify-items: center; /* Yatayda ortalamak için */
+  align-items: center; /* Dikeyde ortalamak için */
+  overflow: auto; /* Taşma durumunda kaydırma çubuğu */
+}
+
+.card {
+  background-color: #333;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 150px; /* Kart yüksekliği */
+  width: 150px; /* Kart genişliği */
+}
+
+.card:hover {
+  transform: scale(1.1); /* Hover ile büyüme efekti */
+}
+
+.card h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* Mobil Uyumluluk */
+@media (max-width: 768px) {
+  .grid-container {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Daha küçük ekranlarda daha küçük kartlar */
+  }
+
+  .card {
+    height: 120px; /* Kart boyutunu daha küçük yapalım */
+    width: 120px;
+    padding: 15px;
+  }
+
+  .card h2 {
+    font-size: 14px; /* Mobilde yazı boyutunu küçültme */
+  }
+}
+
+@media (max-width: 480px) {
+  .grid-container {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Çok küçük ekranlarda kartları daha da küçültelim */
+  }
+
+  .card {
+    height: 100px; /* Kart boyutunu daha da küçük yapalım */
+    width: 100px;
+    padding: 10px;
+  }
+
+  .card h2 {
+    font-size: 12px; /* Yazı boyutunu da daha küçük yapalım */
+  }
+}
+
+  </style>
+</head>
+<body>
+
+  <div class="grid-container" id="gameGrid">
+    <!-- Games will be loaded here -->
+  </div>
+
+  <script>
+	async function loadJackpotGames() {
+	  try {
+		// Fetch the JSON file with a timestamp to prevent caching
+		const response = await fetch('jackpot/games.json?' + new Date().getTime());
+		const games = await response.json();
+
+		// Get the game grid container
+		const gameGrid = document.getElementById('gameGrid');
+
+		// Clear the grid before loading new data
+		gameGrid.innerHTML = '';
+
+		// Loop through the games and create cards for each
+		games.forEach(game => {
+		  const card = document.createElement('div');
+		  card.classList.add('card');
+		  
+		  card.innerHTML = `
+			<h2>${game.name}</h2>
+		  `;
+
+		  // On card click, open the respective game
+		  card.addEventListener('click', () => {
+			window.location.href = `jackpot/${game.file}`;
+		  });
+
+		  // Append the card to the grid
+		  gameGrid.appendChild(card);
+		});
+	  } catch (error) {
+		console.error('Error loading games:', error);
+	  }
+	}
+
+	// Call the function to load games
+	loadJackpotGames();
+  </script>
+
+</body>
+</html>
