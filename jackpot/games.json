@@ -3,5 +3,6 @@
   { "name": "Slot Machine [DEMO]", "file": "SlotMachine_demo.html" },
   { "name": "Two Dice", "file": "TwoDice.html" },
   { "name": "Two Dice [DEMO]", "file": "TwoDice_demo.html" },
-  { "name": "Scratch & Win", "file": "Scratch.html" }
+  { "name": "Scratch & Win", "file": "scratch.html" },
+  { "name": "Scratch & Win [DEMO]", "file": "scratch_demo.html" }
 ]
